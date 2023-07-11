@@ -9,10 +9,7 @@ const createPatient = async (
   phone,
   email,
   address1,
-  address2,
-  imageUrl,
-  imageSize,
-  imageTxt
+  address2
 ) => {
   const queryRunner = appDataSource.createQueryRunner();
   await queryRunner.connect();
@@ -52,19 +49,19 @@ const createPatient = async (
       [patientId.insertId, address1, address2]
     );
 
-    await queryRunner.query(
-      `
-      INSERT INTO patient_image(
-        patientId,
-        imageUrl,
-        imageSize,
-        imageTxt
-      ) VALUES(
-        ?,?,?,?
-      )
-      `,
-      [patientId.insertId, imageUrl, imageSize, imageTxt]
-    );
+    // await queryRunner.query(
+    //   `
+    //   INSERT INTO patient_image(
+    //     patientId,
+    //     imageUrl,
+    //     imageSize,
+    //     imageTxt
+    //   ) VALUES(
+    //     ?,?,?,?
+    //   )
+    //   `,
+    //   [patientId.insertId, imageUrl, imageSize, imageTxt]
+    // );
 
     await queryRunner.commitTransaction();
 
@@ -76,11 +73,7 @@ const createPatient = async (
       cellphone,
       phone,
       email,
-      address1,
-      address2,
-      imageUrl,
-      imageSize,
-      imageTxt,
+      addresses: [address1, address2],
     };
     return result;
   } catch (err) {
@@ -94,114 +87,114 @@ const createPatient = async (
   }
 };
 
-const getPatient = async (patientId) => {
-  const result = await appDataSource.query(
-    `
-    SELECT 
-      p.patientId,
-      p.name,
-      p.ssn,
-      
-      p.birthDate,
-      p.cellPhone,
-      p.phone,
-      pi.imageUrl AS imageUrl,
-        JSON_ARRAYAGG(
-        JSON_OBJECT(
-          'address1', pa.address1,
-          'address2', pa.address2,
-          'createdAt', pa.createdAt
-        )) AS addresses,
-        JSON_ARRAYAGG(
-        JSON_OBJECT(
-          'imageUrl', pi.imageUrl,
-          'imageSize', pi.imageSize,
-          'imageTxt', pi.imageTxt,
-          'createdAt', pi.createdAt
-        ))AS images,
-      p.createdAt
-    FROM 
-      patient AS p
-      LEFT JOIN patient_address AS pa ON pa.patientId = p.patientId
-      LEFT JOIN patient_image AS pi ON pi.patientId = p.patientId
-    WHERE
-      p.patientId=?
-    GROUP BY pi.imageUrl
-    `,
-    [patientId]
-  );
-  console.log(`DAO result: `, result[0]);
-  return result[0];
-};
+// const getPatient = async (patientId) => {
+//   const result = await appDataSource.query(
+//     `
+//     SELECT
+//       p.patientId,
+//       p.name,
+//       p.ssn,
 
-const updatePatient = async (
-  name,
-  ssn,
-  birthDate,
-  cellPhone,
-  phone,
-  email,
-  address1,
-  address2,
-  imageUrl,
-  imageTxt,
-  imageSize
-) => {
-  const queryRunner = appDataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
-  try {
-    await queryRunner.commitTransaction();
-  } catch (err) {
-    console.log(err);
-    await queryRunner.rollbackTransaction();
-  } finally {
-    await queryRunner.release();
-  }
-};
+//       p.birthDate,
+//       p.cellPhone,
+//       p.phone,
+//       pi.imageUrl AS imageUrl,
+//         JSON_ARRAYAGG(
+//         JSON_OBJECT(
+//           'address1', pa.address1,
+//           'address2', pa.address2,
+//           'createdAt', pa.createdAt
+//         )) AS addresses,
+//         JSON_ARRAYAGG(
+//         JSON_OBJECT(
+//           'imageUrl', pi.imageUrl,
+//           'imageSize', pi.imageSize,
+//           'imageTxt', pi.imageTxt,
+//           'createdAt', pi.createdAt
+//         ))AS images,
+//       p.createdAt
+//     FROM
+//       patient AS p
+//       LEFT JOIN patient_address AS pa ON pa.patientId = p.patientId
+//       LEFT JOIN patient_image AS pi ON pi.patientId = p.patientId
+//     WHERE
+//       p.patientId=?
+//     GROUP BY pi.imageUrl
+//     `,
+//     [patientId]
+//   );
+//   console.log(`DAO result: `, result[0]);
+//   return result[0];
+// };
 
-const deletePatient = async (patientId) => {
-  const queryRunner = appDataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
-  try {
-    await queryRunner.query(
-      `
-      DELETE FROM
-        patient
-      WHERE
-        patientId=?
-      `,
-      [patientId]
-    );
+// const updatePatient = async (
+//   name,
+//   ssn,
+//   birthDate,
+//   cellPhone,
+//   phone,
+//   email,
+//   address1,
+//   address2,
+//   imageUrl,
+//   imageTxt,
+//   imageSize
+// ) => {
+//   const queryRunner = appDataSource.createQueryRunner();
+//   await queryRunner.connect();
+//   await queryRunner.startTransaction();
+//   try {
+//     await queryRunner.commitTransaction();
+//   } catch (err) {
+//     console.log(err);
+//     await queryRunner.rollbackTransaction();
+//   } finally {
+//     await queryRunner.release();
+//   }
+// };
 
-    await queryRunner.query(
-      `
-      DELETE FROM
-        patient_image
-      WHERE
-        patientId=?
-      `,
-      [patientId]
-    );
+// const deletePatient = async (patientId) => {
+//   const queryRunner = appDataSource.createQueryRunner();
+//   await queryRunner.connect();
+//   await queryRunner.startTransaction();
+//   try {
+//     await queryRunner.query(
+//       `
+//       DELETE FROM
+//         patient
+//       WHERE
+//         patientId=?
+//       `,
+//       [patientId]
+//     );
 
-    await queryRunner.query(
-      `
-      DELETE FROM
-        patient_address
-      WHERE
-        patientId=?
-      `,
-      [patientId]
-    );
-    await queryRunner.commitTransaction();
-  } catch (err) {
-    await queryRunner.rollbackTransaction();
-    console.log(err);
-    throw err;
-  } finally {
-    await queryRunner.release();
-  }
-};
+//     await queryRunner.query(
+//       `
+//       DELETE FROM
+//         patient_image
+//       WHERE
+//         patientId=?
+//       `,
+//       [patientId]
+//     );
 
-module.exports = { createPatient, getPatient, updatePatient, deletePatient };
+//     await queryRunner.query(
+//       `
+//       DELETE FROM
+//         patient_address
+//       WHERE
+//         patientId=?
+//       `,
+//       [patientId]
+//     );
+//     await queryRunner.commitTransaction();
+//   } catch (err) {
+//     await queryRunner.rollbackTransaction();
+//     console.log(err);
+//     throw err;
+//   } finally {
+//     await queryRunner.release();
+//   }
+// };
+
+module.exports = { createPatient };
